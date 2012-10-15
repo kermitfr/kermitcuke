@@ -46,7 +46,7 @@ When /I call MCollective/ do
 end
 
 Then /I should get an hexadecimal jobid/ do
-  @jobid = @out.first.results[:data][:jobid] 
+  @jobid = @out.first.results[:data][:jobid]
   @jobid.should =~ /^[a-f0-9]+$/
 end
 

@@ -1,6 +1,6 @@
 Feature: MCollective check
   In order to ensure that my MCollective installation works
-  As an Operator 
+  As an Operator
   I want to run a quick MCollective check
 
   Scenario: Mco Ping
@@ -39,7 +39,7 @@ Feature: MCollective check
       | nodeid           |
       | el5.labolinux.fr |
       | el6.labolinux.fr |
-  
+
   Scenario Outline: Mco Schedule in any distant future
     Given the Agent is scheduler
     And the Action is schedule
@@ -56,6 +56,5 @@ Feature: MCollective check
       | nodeid           |
       | el5.labolinux.fr |
       | el6.labolinux.fr |
-
 
 
