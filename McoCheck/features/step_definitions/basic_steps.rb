@@ -32,10 +32,6 @@ Given /the Parameters are/ do |table|
   @arguments = Hash[myhash.map{|(k,v)| [k.to_sym,v]}]
 end
 
-Given /I wait (\d+) seconds for the task to finish$/ do |t|
-  @delay = t.to_i 
-end
-
 Given /the target is random/ do
   @mc.limit_targets = 1
   @mc.limit_method = :random
