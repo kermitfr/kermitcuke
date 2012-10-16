@@ -17,7 +17,8 @@ Given /the Agent is ([A-z_]*)/ do |agent|
              :progress_bar => false,
              :timeout      => MCO_TIMEOUT,
              :config       => MCO_CONFIG,
-             :filter       => { "agent" => [], "identity" => [] },
+             #:filter       => { "agent" => [], "identity" => [] },
+             :filter       => MCollective::Util.empty_filter,
              :collective   => MCO_COLLECTIVE,
              :disctimeout  => MCO_DISCOVTMOUT } )
 end
