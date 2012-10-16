@@ -71,4 +71,25 @@ Then /I should get a good task result within (\d+) seconds/ do |delay|
   statuscode.should == 0
 end
 
+Then /I should get an inventory within (\d+) seconds/ do |delay|
+  sleep delay.to_i
+  newi = File.basename(@out.first.results[:data][:result])
+  inventoryfolder = '/var/lib/kermit/queue/kermit.inventory/'
+  inventories = Dir["#{inventoryfolder}/*.json"].map{ |f| File.basename f }.join("\n")
+  res = inventories.scan(/^.*#{newi}$/)
+  res.should_not be_empty
+  ntime=Time.now.to_i
+  ctime=File.ctime("#{inventoryfolder}/#{res.first}").to_i
+  subst=ntime-ctime
+  subst.should <= delay.to_i 
+end
+
+Then /I should get a log within (\d+) seconds/ do |delay|
+  sleep delay.to_i
+  newl = File.basename(@out.first.results[:data]['logfile'])
+  logfolder = '/var/lib/kermit/queue/kermit.log/'
+  logs = Dir["#{logfolder}/*"].map{ |f| File.basename f }.join("\n")
+  res = logs.scan(/^.*#{newl}$/)
+  res.should_not be_empty
+end
 
