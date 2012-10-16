@@ -36,7 +36,7 @@ Feature: MCollective check
        | running   |
        | scheduled |
        | finished  |
-    Then I should get a good task result within 2 seconds
+    And I should get a good task result within 2 seconds
 
     Examples: 
       | nodeid           |
@@ -55,6 +55,23 @@ Feature: MCollective check
     Then I should get an hexadecimal jobid
     And I should get a task in one of those states :
        | scheduled |
+
+    Examples: 
+      | nodeid           |
+      | el5.labolinux.fr |
+      | el6.labolinux.fr |
+
+  @scheduler
+  Scenario Outline: Mco Schedule a task with arguments
+    Given the Agent is scheduler
+    And the Action is schedule
+    And the Parameters are
+      | agentname | actionname | schedtype | schedarg | package | params  |
+      | package   | status     | in        | 0s       | ruby    | package |
+    And the Identity of the target is <nodeid>
+    When I call MCollective
+    Then I should get an hexadecimal jobid
+    And I should get a good task result within 2 seconds
 
     Examples: 
       | nodeid           |
