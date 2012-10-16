@@ -1,5 +1,6 @@
 require 'rspec/expectations' 
 require 'mcollective'
+require 'timeout'
 require 'pp'
 
 MCO_CONFIG = '/etc/mcollective/client.cfg'
@@ -64,33 +65,56 @@ Then /the StatusMsg is ([A-z_]*)/ do |statusmsg|
 end
 
 Then /I should get a good task result within (\d+) seconds/ do |delay|
-  sleep delay.to_i
-  @out = @mc.send('query', :jobid=>@jobid, :output=>'yes')
-  state = @out.first.results[:data][:state]
+  state = 'unknown'
+  Timeout::timeout(delay.to_i) do 
+    until state =~ /finished/ do
+      sleep 0.5
+      @out = @mc.send('query', :jobid=>@jobid, :output=>'yes')
+      state = @out.first.results[:data][:state]
+    end
+  end
   statuscode = @out.first.results[:data][:statuscode]
   state.should =~ /finished/
   statuscode.should == 0
 end
 
 Then /I should get an inventory within (\d+) seconds/ do |delay|
-  sleep delay.to_i
-  newi = File.basename(@out.first.results[:data][:result])
   inventoryfolder = '/var/lib/kermit/queue/kermit.inventory/'
-  inventories = Dir["#{inventoryfolder}/*.json"].map{ |f| File.basename f }.join("\n")
-  res = inventories.scan(/^.*#{newi}$/)
-  res.should_not be_empty
   ntime=Time.now.to_i
+  res = Array.new
+  Timeout::timeout(delay.to_i) do 
+    until res.any?
+      sleep 0.5 
+      begin
+        newi = File.basename(@out.first.results[:data][:result])
+      rescue NoMethodError
+        next
+      end
+      inventories = Dir["#{inventoryfolder}/*.json"].map{ |f| File.basename f }.join("\n")
+      res = inventories.scan(/^.*#{newi}$/)
+     end
+  end
+  res.should_not be_empty
   ctime=File.ctime("#{inventoryfolder}/#{res.first}").to_i
   subst=ntime-ctime
   subst.should <= delay.to_i 
 end
 
 Then /I should get a log within (\d+) seconds/ do |delay|
-  sleep delay.to_i
-  newl = File.basename(@out.first.results[:data]['logfile'])
   logfolder = '/var/lib/kermit/queue/kermit.log/'
-  logs = Dir["#{logfolder}/*"].map{ |f| File.basename f }.join("\n")
-  res = logs.scan(/^.*#{newl}$/)
+  res = Array.new 
+  Timeout::timeout(delay.to_i) do 
+    until res.any?
+      sleep 0.5
+      begin
+        newlog = File.basename(@out.first.results[:data]['logfile'])
+      rescue NoMethodError
+        next
+      end
+      logs = Dir["#{logfolder}/*"].map{ |f| File.basename f }.join("\n")
+      res = logs.scan(/^.*#{newlog}$/)
+    end
+  end
   res.should_not be_empty
 end
 

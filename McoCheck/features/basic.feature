@@ -36,7 +36,7 @@ Feature: MCollective check
        | running   |
        | scheduled |
        | finished  |
-    And I should get a good task result within 2 seconds
+    And I should get a good task result within 3 seconds
 
     Examples: 
       | nodeid           |
@@ -71,7 +71,7 @@ Feature: MCollective check
     And the Identity of the target is <nodeid>
     When I call MCollective
     Then I should get an hexadecimal jobid
-    And I should get a good task result within 2 seconds
+    And I should get a good task result within 3 seconds
 
     Examples: 
       | nodeid           |
@@ -84,7 +84,7 @@ Feature: MCollective check
     And the Action is inventory
     And the Identity of the target is <nodeid>
     When I call MCollective
-    Then I should get an inventory within 5 seconds
+    Then I should get an inventory within 10 seconds
     Examples: 
       | nodeid           |
       | el5.labolinux.fr |
@@ -95,7 +95,7 @@ Feature: MCollective check
     And the Action is inventory
     And the Identity of the target is <nodeid>
     When I call MCollective
-    Then I should get an inventory within 5 seconds
+    Then I should get an inventory within 10 seconds
     Examples: 
       | nodeid            |
       | el6a.labolinux.fr |
@@ -109,7 +109,7 @@ Feature: MCollective check
       | default      |
     And the Identity of the target is <nodeid>
     When I call MCollective
-    Then I should get a log within 5 seconds
+    Then I should get a log within 10 seconds
     Examples: 
       | nodeid            |
       | el6a.labolinux.fr |
