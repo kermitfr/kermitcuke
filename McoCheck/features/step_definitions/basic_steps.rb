@@ -1,7 +1,5 @@
 require 'rspec/expectations' 
 require 'mcollective'
-require 'timeout'
-require 'pp'
 
 MCO_CONFIG = '/etc/mcollective/client.cfg'
 MCO_TIMEOUT = 5
@@ -9,8 +7,9 @@ MCO_DISCOVTMOUT = 1
 MCO_DEBUG = false
 MCO_COLLECTIVE = nil
 
-Given /the Agent is ([A-z_]*)/ do |agent|
+When /I use ([A-z_]*) ([A-z_]*)/ do |agent, action|
   @agent = agent
+  @action = action
   @mc = MCollective::RPC::Client.new( agent, \
          :configfile => MCO_CONFIG,
          :options => {
@@ -24,22 +23,18 @@ Given /the Agent is ([A-z_]*)/ do |agent|
              :disctimeout  => MCO_DISCOVTMOUT } )
 end
 
-Given /the Action is ([A-z_]*)/ do |action|
-  @action = action
-end
-
-Given /the Parameters are/ do |table|
+When /the Parameters are/ do |table|
   myhash = table.hashes.first
   # convert string keys to symbols
   @arguments = Hash[myhash.map{|(k,v)| [k.to_sym,v]}]
 end
 
-Given /the target is random/ do
+When /the target is random/ do
   @mc.limit_targets = 1
   @mc.limit_method = :random
 end
 
-Given /the Identity of the target is ([A-z0-9\.]*)/ do |id|
+When /the Identity of the target is ([A-z0-9\.]*)/ do |id|
   @mc.identity_filter id
 end
 
@@ -64,57 +59,41 @@ Then /the StatusMsg is ([A-z_]*)/ do |statusmsg|
   statusmsg.should == @out.first.results[:statusmsg]
 end
 
-Then /I should get a good task result within (\d+) seconds/ do |delay|
-  state = 'unknown'
-  Timeout::timeout(delay.to_i) do 
-    until state =~ /finished/ do
-      sleep 0.5
+Then /I should eventually get a good task result/ do
+  state = nil 
+  statuscode = nil
+  eventually {
       @out = @mc.send('query', :jobid=>@jobid, :output=>'yes')
       state = @out.first.results[:data][:state]
-    end
-  end
+      state.should =~ /finished/
+  }
   statuscode = @out.first.results[:data][:statuscode]
-  state.should =~ /finished/
   statuscode.should == 0
 end
 
-Then /I should get an inventory within (\d+) seconds/ do |delay|
+Then /I should eventually get an inventory/ do
   inventoryfolder = '/var/lib/kermit/queue/kermit.inventory/'
   ntime=Time.now.to_i
   res = Array.new
-  Timeout::timeout(delay.to_i) do 
-    until res.any?
-      sleep 0.5 
-      begin
-        newi = File.basename(@out.first.results[:data][:result])
-      rescue NoMethodError
-        next
-      end
+  eventually {
+      newi = File.basename(@out.first.results[:data][:result])
       inventories = Dir["#{inventoryfolder}/*.json"].map{ |f| File.basename f }.join("\n")
       res = inventories.scan(/^.*#{newi}$/)
-     end
-  end
-  res.should_not be_empty
+      res.should_not be_empty
+  }
   ctime=File.ctime("#{inventoryfolder}/#{res.first}").to_i
   subst=ntime-ctime
-  subst.should <= delay.to_i 
+  subst.should <= 10 
 end
 
-Then /I should get a log within (\d+) seconds/ do |delay|
+Then /I should eventually get a log/ do
   logfolder = '/var/lib/kermit/queue/kermit.log/'
   res = Array.new 
-  Timeout::timeout(delay.to_i) do 
-    until res.any?
-      sleep 0.5
-      begin
-        newlog = File.basename(@out.first.results[:data]['logfile'])
-      rescue NoMethodError
-        next
-      end
-      logs = Dir["#{logfolder}/*"].map{ |f| File.basename f }.join("\n")
-      res = logs.scan(/^.*#{newlog}$/)
-    end
-  end
-  res.should_not be_empty
+  eventually {
+    newlog = File.basename(@out.first.results[:data]['logfile'])
+    logs = Dir["#{logfolder}/*"].map{ |f| File.basename f }.join("\n")
+    res = logs.scan(/^.*#{newlog}$/)
+    res.should_not be_empty
+  }
 end
 

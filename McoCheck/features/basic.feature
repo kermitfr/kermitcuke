@@ -5,38 +5,35 @@ Feature: MCollective check
 
   @actions
   Scenario: Mco Ping
-    Given the Agent is rpcutil
-    And the Action is ping
+    When I use rpcutil ping
     And the target is random
-    When I call MCollective
+    And I call MCollective
     Then the StatusMsg is OK
 
   @actions
   Scenario: Mco Package
-    Given the Agent is package
-    And the Action is status
+    When I use package status
     And the Parameters are
       | package |
       | bash    |
     And the target is random
-    When I call MCollective
+    And I call MCollective
     Then the StatusMsg is OK
 
   @scheduler
   Scenario Outline: Mco Schedule Now
-    Given the Agent is scheduler
-    And the Action is schedule
+    When I use scheduler schedule
     And the Parameters are
       | agentname | actionname |
       | rpcutil   | ping       |
     And the Identity of the target is <nodeid>
-    When I call MCollective
+    And I call MCollective
     Then I should get an hexadecimal jobid
     And I should get a task in one of those states :
        | running   |
        | scheduled |
        | finished  |
-    And I should get a good task result within 3 seconds
+    And I should eventually get a good task result
 
     Examples: 
       | nodeid           |
@@ -45,13 +42,12 @@ Feature: MCollective check
 
   @scheduler
   Scenario Outline: Mco Schedule in any distant future
-    Given the Agent is scheduler
-    And the Action is schedule
+    When I use scheduler schedule
     And the Parameters are
       | agentname | actionname | schedtype | schedarg |
       | rpcutil   | ping       | in        | 600s     |
     And the Identity of the target is <nodeid>
-    When I call MCollective
+    And I call MCollective
     Then I should get an hexadecimal jobid
     And I should get a task in one of those states :
        | scheduled |
@@ -63,15 +59,14 @@ Feature: MCollective check
 
   @scheduler
   Scenario Outline: Mco Schedule a task with arguments
-    Given the Agent is scheduler
-    And the Action is schedule
+    When I use scheduler schedule
     And the Parameters are
       | agentname | actionname | schedtype | schedarg | package | params  |
       | package   | status     | in        | 0s       | ruby    | package |
     And the Identity of the target is <nodeid>
-    When I call MCollective
+    And I call MCollective
     Then I should get an hexadecimal jobid
-    And I should get a good task result within 3 seconds
+    And I should eventually get a good task result
 
     Examples: 
       | nodeid           |
@@ -80,36 +75,33 @@ Feature: MCollective check
 
   @inventories
   Scenario Outline: Trigger a postgreSQL inventory
-    Given the Agent is postgresql 
-    And the Action is inventory
+    When I use postgresql inventory
     And the Identity of the target is <nodeid>
-    When I call MCollective
-    Then I should get an inventory within 10 seconds
+    And I call MCollective
+    Then I should eventually get an inventory
     Examples: 
       | nodeid           |
       | el5.labolinux.fr |
 
   @inventories
   Scenario Outline: Trigger a JBoss inventory
-    Given the Agent is jboss 
-    And the Action is inventory
+    When I use jboss inventory
     And the Identity of the target is <nodeid>
-    When I call MCollective
-    Then I should get an inventory within 10 seconds
+    And I call MCollective
+    Then I should eventually get an inventory
     Examples: 
       | nodeid            |
       | el6a.labolinux.fr |
 
   @logs
   Scenario Outline: Trigger a JBoss log collection 
-    Given the Agent is jboss 
-    And the Action is get_log 
+    When I use jboss get_log 
     And the Parameters are
       | instancename |
       | default      |
     And the Identity of the target is <nodeid>
-    When I call MCollective
-    Then I should get a log within 10 seconds
+    And I call MCollective
+    Then I should eventually get a log
     Examples: 
       | nodeid            |
       | el6a.labolinux.fr |
