@@ -34,7 +34,7 @@ When /the target is random/ do
   @mc.limit_method = :random
 end
 
-When /the Identity of the target is ([A-z0-9\.]*)/ do |id|
+When /the Identity of the target is ([A-z0-9_\-\.]+)/ do |id|
   @mc.identity_filter id
 end
 
