@@ -67,7 +67,6 @@ Feature: MCollective check
     And I call MCollective
     Then I should get an hexadecimal jobid
     And I should eventually get a good task result
-
     Examples: 
       | nodeid           |
       | el5.labolinux.fr |
