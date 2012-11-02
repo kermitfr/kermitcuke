@@ -64,3 +64,53 @@ Then /^the StatusMsg is OK$/ do
 end
 
 
+Then /^I should get an hexadecimal jobid$/ do
+  j = JSON.load(@response.body)
+  @jobid = j.first['data']['jobid']
+  @jobid.should =~ /^[a-f0-9]+$/
+end
+
+Then /^I should get a task in one of those states :$/ do |tlist|
+  regexp = tlist.raw.flatten.join(sep='|')
+  url =  "#{RESTSRV}/scheduler/query/"
+  params = { 'parameters' => { :output => 'yes', :jobid => @jobid } }
+  uri = URI.parse(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  @request = Net::HTTP::Post.new(uri.request_uri)
+  filters = { 'filters' => {} }
+  body    = Hash.new
+  body.merge!(@limit)   if @limit
+  body.merge!(params)   if params
+  filters['filters'].merge!(@identity) if @identity
+  filters['filters'].merge!(@fact)     if @fact
+  filters['filters'].merge!(@class)    if @class
+  body.merge!(filters)  if filters['filters']
+  unless body.empty?
+    @request.body = JSON.dump(body)
+    #@request["Content-Type"] = "application/json, charset=UTF-8"
+    @request["Content-Type"] = "application/json"
+  end
+  response = @http.request(@request) 
+  j = JSON.load(response.body)
+  state = j.first['data']['state']
+  state.should =~ /#{regexp}/
+end
+
+Then /I should eventually get a good task result/ do
+  state = nil
+  statuscode = nil
+  eventually {
+      response = @http.request(@request) 
+      @j = JSON.load(response.body)
+      state = @j.first['data']['state']
+      state.should =~ /finished/
+  }
+  statuscode =@j.first['data']['statuscode']
+  statuscode.should == 0
+end
+
+Then /I should get a 'pong'/ do
+  result = @j.first['data']['data']['pong']
+  result.class.should == 0.class 
+end
+

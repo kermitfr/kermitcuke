@@ -74,7 +74,6 @@ Feature: REST Mco check
     And I query the REST server
     Then the StatusMsg is OK
 
-
   @actions
   Scenario Outline: Mco Service with multiple filters 
     When I call service status
@@ -90,3 +89,40 @@ Feature: REST Mco check
       | el5.labolinux.fr |
       | el6.labolinux.fr |
 
+  @scheduler
+  Scenario Outline: Mco Schedule in any distant future
+    When I call scheduler schedule
+    And the Identity of the target is <nodeid>
+    And the Parameters are
+      | agentname | actionname | schedtype | schedarg |
+      | rpcutil   | ping       | in        | 600s     |
+    And I query the REST server
+    Then I should get an hexadecimal jobid
+    And I should get a task in one of those states :
+       | scheduled |
+
+    Examples:                  
+      | nodeid           |     
+      | el5.labolinux.fr |     
+      | el6.labolinux.fr |
+
+  @scheduler
+  Scenario Outline: Mco Schedule Now
+    When I call scheduler schedule
+    And the Identity of the target is <nodeid>
+    And the Parameters are
+      | agentname | actionname |
+      | rpcutil   | ping       |
+    And I query the REST server
+    Then I should get an hexadecimal jobid
+    And I should get a task in one of those states :
+       | running   |
+       | scheduled |
+       | finished  |
+    And I should eventually get a good task result
+    And I should get a 'pong' 
+
+    Examples:
+      | nodeid           |
+      | el5.labolinux.fr |
+      | el6.labolinux.fr |
