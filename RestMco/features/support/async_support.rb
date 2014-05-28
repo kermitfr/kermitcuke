@@ -2,7 +2,7 @@ require 'timeout'
 
 module AsyncSupport
     def eventually
-        Timeout::timeout(10) do 
+        Timeout::timeout(10) do
           loop do
               begin
                   yield
